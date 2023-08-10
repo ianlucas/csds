@@ -181,6 +181,10 @@ export class CSGODS extends EventEmitter {
                 this.executable,
                 this.options.launch.split(" ")
             );
+            this.instance.onExit(() => {
+                this.instance = undefined;
+                this.setState(CSGODSState.READY);
+            });
             this.instance.onData((raw: any) => {
                 const data = raw.toString() as string;
                 const publicIpMatch = data.match(serverPublicIpRE);
@@ -201,17 +205,21 @@ export class CSGODS extends EventEmitter {
             && (force || this.state === CSGODSState.ON)
         ) {
             this.setState(CSGODSState.TURNING_OFF);
-            this.instance.onExit(() => {
-                this.instance = undefined;
-                this.setState(CSGODSState.READY);
-            });
-            this.instance.kill();
+            if (force) {
+                this.instance.kill();
+            } else {
+                this.console("exit");
+            }
+            return true;
         }
+        return false;
     }
 
     console(line: string) {
         if (this.instance !== undefined) {
             this.instance.write(`${line}\n`);
+            return true;
         }
+        return false;
     }
 }

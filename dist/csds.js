@@ -125,6 +125,10 @@ export class CSGODS extends EventEmitter {
             }
             console.log(`Starting server with launch options: ${launch}`);
             this.instance = spawn(this.executable, this.options.launch.split(" "));
+            this.instance.onExit(() => {
+                this.instance = undefined;
+                this.setState(CSGODSState.READY);
+            });
             this.instance.onData((raw) => {
                 const data = raw.toString();
                 const publicIpMatch = data.match(serverPublicIpRE);
@@ -142,16 +146,21 @@ export class CSGODS extends EventEmitter {
         if (this.instance !== undefined
             && (force || this.state === CSGODSState.ON)) {
             this.setState(CSGODSState.TURNING_OFF);
-            this.instance.onExit(() => {
-                this.instance = undefined;
-                this.setState(CSGODSState.READY);
-            });
-            this.instance.kill();
+            if (force) {
+                this.instance.kill();
+            }
+            else {
+                this.console("exit");
+            }
+            return true;
         }
+        return false;
     }
     console(line) {
         if (this.instance !== undefined) {
             this.instance.write(`${line}\n`);
+            return true;
         }
+        return false;
     }
 }

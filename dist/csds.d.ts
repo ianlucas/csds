@@ -52,7 +52,7 @@ export declare class CSGODS extends EventEmitter {
     read(file: string): string;
     isOn(): boolean;
     start(): void;
-    stop(force?: boolean): void;
-    console(line: string): void;
+    stop(force?: boolean): boolean;
+    console(line: string): boolean;
 }
 export {};
