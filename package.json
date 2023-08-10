@@ -1,0 +1,25 @@
+{
+    "name": "csds",
+    "version": "1.0.0",
+    "description": "Counter-Strike Dedicated Server manager.",
+    "main": "dist/index.js",
+    "scripts": {
+        "dev": "tsc -w",
+        "build": "tsc",
+        "build-docs": "typedoc src/index.ts"
+    },
+    "author": "Ian Lucas",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^18.15.11",
+        "typedoc": "^0.24.8",
+        "typescript": "^5.0.4"
+    },
+    "type": "module",
+    "dependencies": {
+        "@types/adm-zip": "^0.5.0",
+        "@types/tar": "^6.1.5",
+        "adm-zip": "^0.5.10",
+        "tar": "^6.1.15"
+    }
+}
