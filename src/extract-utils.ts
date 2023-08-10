@@ -1,22 +1,22 @@
-import AdminZip from "adm-zip";
-import { createReadStream, existsSync, mkdirSync } from "fs";
+import AdmZip from "adm-zip";
+import { createReadStream } from "fs";
 import { extract } from "tar";
 import { createGunzip } from "zlib";
 
-export function mkdirRecursively(path: string) {
-    const folders = path.split("/");
-    let currentPath = "";
-    for (const folder of folders) {
-        currentPath += folder + "/";
-        if (!existsSync(currentPath)) {
-            mkdirSync(currentPath);
-        }
-    }
+export async function extractZip(zipFilePath: string, destFolder: string) {
+    const zip = new AdmZip(zipFilePath);
+    zip.extractAllTo(destFolder, true);
 }
 
-export async function extractZip(zipFilePath: string, destFolder: string) {
-    const zip = new AdminZip(zipFilePath);
+export function extractZipFromBuffer(
+    zipFileBuffer: Buffer,
+    destFolder: string
+) {
+    const zip = new AdmZip(zipFileBuffer);
     zip.extractAllTo(destFolder, true);
+    return zip.getEntries().map((entry) => {
+        return entry.entryName;
+    }).join("\n");
 }
 
 export async function extractTarGz(

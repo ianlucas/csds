@@ -1,6 +1,6 @@
 export declare class SteamCMD {
-    private steamCMDPath;
-    private steamCMDExecutable;
+    path: string;
+    private executable;
     private platform;
     constructor(platform: "win32" | "linux" | undefined, path: string);
     private download;

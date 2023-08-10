@@ -1,1 +1,1 @@
-export * from "./steamcmd.js";
+import "./test.js";

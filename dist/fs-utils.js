@@ -1,9 +1,6 @@
-import AdmZip from "adm-zip";
-import { createReadStream, existsSync, mkdirSync, readdirSync, rmdirSync, statSync, unlinkSync } from "fs";
+import { existsSync, mkdirSync, readdirSync, rmdirSync, statSync, unlinkSync } from "fs";
 import { resolve } from "path";
-import { extract } from "tar";
-import { createGunzip } from "zlib";
-export function mkdirRecursively(path) {
+export function mkdirRecursive(path) {
     const folders = path.split("/");
     let currentPath = "";
     for (const folder of folders) {
@@ -38,31 +35,4 @@ export function rmByFileList(basePath, fileList) {
             console.error(`Error deleting ${absolutePath}:`, error);
         }
     }
-}
-export async function extractZip(zipFilePath, destFolder) {
-    const zip = new AdmZip(zipFilePath);
-    zip.extractAllTo(destFolder, true);
-}
-export function extractZipFromBuffer(zipFileBuffer, destFolder) {
-    const zip = new AdmZip(zipFileBuffer);
-    zip.extractAllTo(destFolder, true);
-    return zip.getEntries().map((entry) => {
-        return entry.entryName;
-    }).join("\n");
-}
-export async function extractTarGz(tarGzFilePath, destFolder) {
-    return new Promise((resolve, reject) => {
-        const readStream = createReadStream(tarGzFilePath);
-        const gunzipStream = createGunzip();
-        const extractStream = extract({ cwd: destFolder });
-        readStream
-            .pipe(gunzipStream)
-            .pipe(extractStream)
-            .on("finish", () => {
-            resolve();
-        })
-            .on("error", (error) => {
-            reject(error);
-        });
-    });
 }

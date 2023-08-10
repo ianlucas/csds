@@ -1,8 +1,9 @@
-import { createWriteStream, existsSync, unlink, unlinkSync } from "fs";
+import { createWriteStream, existsSync, unlinkSync } from "fs";
 import { get } from "https";
 import { basename, join } from "path";
 import { spawn } from "./child-process-utils.js";
-import { extractTarGz, extractZip, mkdirRecursively } from "./utils.js";
+import { extractTarGz, extractZip } from "./extract-utils.js";
+import { mkdirRecursive } from "./fs-utils.js";
 
 const STEAMCMD_LINUX_URL =
     "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz";
@@ -13,14 +14,14 @@ const progressRE =
     /Update state \((0x\d+)\) (\w+), progress: (\d+.\d+) \((\d+) \/ (\d+)\)/;
 
 export class SteamCMD {
-    private steamCMDPath: string;
-    private steamCMDExecutable: string;
+    path: string;
+    private executable: string;
     private platform: "win32" | "linux";
 
     constructor(platform: "win32" | "linux" = "linux", path: string) {
-        this.steamCMDPath = join(path, ".steamcmd");
-        this.steamCMDExecutable = join(
-            this.steamCMDPath,
+        this.path = join(path, ".steamcmd");
+        this.executable = join(
+            this.path,
             platform === "win32" ? "steamcmd.exe" : "steamcmd.sh"
         );
         this.platform = platform;
@@ -32,7 +33,7 @@ export class SteamCMD {
             const url = this.platform === "win32"
                 ? STEAMCMD_WINDOWS_URL
                 : STEAMCMD_LINUX_URL;
-            const filePath = join(this.steamCMDPath, basename(url));
+            const filePath = join(this.path, basename(url));
             const file = createWriteStream(filePath);
             get(url, (response) => {
                 response.pipe(file);
@@ -51,14 +52,14 @@ export class SteamCMD {
     private async extract(steamCMDCompressedFilePath: string) {
         console.log("Extracting SteamCMD...");
         const extract = this.platform === "win32" ? extractZip : extractTarGz;
-        await extract(steamCMDCompressedFilePath, this.steamCMDPath);
+        await extract(steamCMDCompressedFilePath, this.path);
         unlinkSync(steamCMDCompressedFilePath);
         console.log("SteamCMD extracted.");
     }
 
     async initialize() {
-        if (!existsSync(this.steamCMDExecutable)) {
-            mkdirRecursively(this.steamCMDPath);
+        if (!existsSync(this.executable)) {
+            mkdirRecursive(this.path);
             await this.extract(await this.download());
         }
     }
@@ -67,12 +68,11 @@ export class SteamCMD {
         commands: string,
         onData: (data: string) => void
     ): Promise<boolean> {
-        commands =
-            `+force_install_dir ${this.steamCMDPath}/steamcmd ${commands}`;
+        commands = `+force_install_dir ${this.path}/steamcmd ${commands}`;
         console.log("Running SteamCMD with commands:", commands);
         return new Promise((resolve) => {
             const child = spawn(
-                this.steamCMDExecutable,
+                this.executable,
                 commands.split(" ")
             );
             child.stdout.on("data", (data) => {
