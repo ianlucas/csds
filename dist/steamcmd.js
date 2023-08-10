@@ -5,6 +5,7 @@ import { spawn } from "./child-process-utils.js";
 import { extractTarGz, extractZip, mkdirRecursively } from "./utils.js";
 const STEAMCMD_LINUX_URL = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz";
 const STEAMCMD_WINDOWS_URL = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
+const progressRE = /Update state \((0x\d+)\) (\w+), progress: (\d+.\d+) \((\d+) \/ (\d+)\)/;
 export class SteamCMD {
     steamCMDPath;
     steamCMDExecutable;
@@ -62,6 +63,23 @@ export class SteamCMD {
             });
             child.on("exit", (code) => {
                 resolve(code === 0);
+            });
+        });
+    }
+    async update(appId, onProgress) {
+        await this.run(`+login anonymous +app_update ${appId} +quit`, data => {
+            data.split("\n").forEach(line => {
+                const progressMatches = line.trim().match(progressRE);
+                if (progressMatches) {
+                    const [, state, status, progress, current, total] = progressMatches;
+                    onProgress({
+                        state,
+                        status,
+                        progress: parseFloat(progress),
+                        current: parseInt(current),
+                        total: parseInt(total)
+                    });
+                }
             });
         });
     }

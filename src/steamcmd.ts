@@ -9,6 +9,9 @@ const STEAMCMD_LINUX_URL =
 const STEAMCMD_WINDOWS_URL =
     "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
 
+const progressRE =
+    /Update state \((0x\d+)\) (\w+), progress: (\d+.\d+) \((\d+) \/ (\d+)\)/;
+
 export class SteamCMD {
     private steamCMDPath: string;
     private steamCMDExecutable: string;
@@ -82,5 +85,38 @@ export class SteamCMD {
                 resolve(code === 0);
             });
         });
+    }
+
+    async update(
+        appId: number,
+        onProgress: (
+            progress: {
+                state: string;
+                status: string;
+                progress: number;
+                current: number;
+                total: number;
+            }
+        ) => void
+    ) {
+        await this.run(
+            `+login anonymous +app_update ${appId} +quit`,
+            data => {
+                data.split("\n").forEach(line => {
+                    const progressMatches = line.trim().match(progressRE);
+                    if (progressMatches) {
+                        const [, state, status, progress, current, total] =
+                            progressMatches;
+                        onProgress({
+                            state,
+                            status,
+                            progress: parseFloat(progress),
+                            current: parseInt(current),
+                            total: parseInt(total)
+                        });
+                    }
+                });
+            }
+        );
     }
 }

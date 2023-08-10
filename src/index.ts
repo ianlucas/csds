@@ -2,5 +2,4 @@
  *  Copyright (c) Ian Lucas. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
-// export * from "./steamcmd.js";
-import "./test.js";
+export * from "./steamcmd.js";
