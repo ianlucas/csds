@@ -1,10 +1,14 @@
 import EventEmitter from "events";
-import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "fs";
 import { join, resolve } from "path";
 import { spawn } from "./child-process-utils.js";
 import { extractZipFromBuffer } from "./extract-utils.js";
 import { mkdirRecursive, rmByFileList } from "./fs-utils.js";
+import { getLocalIpAddress } from "./os-utils.js";
 import { SteamCMD } from "./steamcmd.js";
+const serverPublicIpRE = /Public IP is (\d+\.\d+\.\d+\.\d+)/;
+const serverOnRE = /GC Connection established for server/;
+const CSGODS_APPID = 740;
 export var CSGODSState;
 (function (CSGODSState) {
     CSGODSState[CSGODSState["UNINITIALIZED"] = 0] = "UNINITIALIZED";
@@ -17,23 +21,30 @@ export var CSGODSState;
 })(CSGODSState || (CSGODSState = {}));
 export class CSGODS extends EventEmitter {
     state = CSGODSState.UNINITIALIZED;
+    publicIpAddress;
+    localIpAddress;
     steamCMD;
     csgoPath;
     csgoAddonsPath;
-    csgoServerPath;
-    csgoServer = null;
+    csgoDSPath;
+    instance;
+    executable;
     options = {
-        launch: "-game csgo -console -usercon +game_type 0 +game_mode 1 +mapgroup mg_active +map de_dust2 -tickrate 128 -maxplayers_override 16 -norestart -nobreakpad -nocrashdialog -nohltv -net_port_try -ip"
+        port: 27015,
+        tvPort: 27020,
+        steamApiKey: "",
+        gsltToken: "",
+        launch: "-game csgo -console -usercon +game_type 0 +game_mode 1 +map de_dust2 -tickrate 128 -maxplayers_override 12 -norestart -nobreakpad -nocrashdialog"
     };
     constructor(platform = "linux", path, options) {
         super();
         this.steamCMD = new SteamCMD(platform, path);
         this.csgoAddonsPath = join(path, ".steamcmd/plugins");
-        this.csgoServerPath = join(this.steamCMD.path, "steamcmd/steamapps/common/Counter-Strike Global Offensive");
-        this.csgoPath = join(this.csgoServerPath, "csgo");
-        if (options) {
-            this.options = options;
-        }
+        this.csgoDSPath = join(this.steamCMD.path, "steamcmd");
+        this.executable = join(this.csgoDSPath, platform === "win32" ? "srcds.exe" : "srcds_run");
+        this.csgoPath = join(this.csgoDSPath, "csgo");
+        this.options = options ? { ...this.options, ...options } : this.options;
+        this.localIpAddress = getLocalIpAddress(this.options?.port);
     }
     setState(state) {
         this.state = state;
@@ -45,10 +56,18 @@ export class CSGODS extends EventEmitter {
     }
     async updateCSGODS() {
         this.setState(CSGODSState.UPDATING_CSGODS);
-        await this.steamCMD.update(740, (progress) => {
+        await this.steamCMD.update(CSGODS_APPID, (progress) => {
             this.emit("progress", progress);
         });
+        this.fixCSGODS();
         this.setState(CSGODSState.READY);
+    }
+    /// @see https://github.com/GameServerManagers/LinuxGSM/blob/master/lgsm/functions/fix_csgo.sh
+    fixCSGODS() {
+        const libgccPath = join(this.csgoDSPath, "libgcc_s.so.1");
+        if (existsSync(libgccPath)) {
+            renameSync(libgccPath, `${libgccPath}.bak`);
+        }
     }
     async initialize() {
         await this.initializeSteamCMD();
@@ -86,28 +105,53 @@ export class CSGODS extends EventEmitter {
         });
     }
     isOn() {
-        return this.csgoServer !== null;
+        return this.instance !== undefined;
     }
     start() {
-        if (this.csgoServer === null && this.state === CSGODSState.READY) {
+        if (this.instance === undefined && this.state === CSGODSState.READY) {
             this.setState(CSGODSState.TURNING_ON);
-            this.csgoServer = spawn(join(this.csgoServerPath, "srcds_run"), this.options.launch.split(" "));
-            // @TODO: Read stdout to check if server is on.
+            let { launch, steamApiKey, gsltToken, port, tvPort } = this.options;
+            if (steamApiKey) {
+                launch += ` -authkey ${steamApiKey}`;
+            }
+            if (gsltToken) {
+                launch += ` +sv_setsteamaccount ${gsltToken} -net_port_try 1`;
+            }
+            if (port) {
+                launch += ` -port ${port}`;
+            }
+            if (tvPort) {
+                launch += ` +tv_port ${tvPort}`;
+            }
+            console.log(`Starting server with launch options: ${launch}`);
+            this.instance = spawn(this.executable, this.options.launch.split(" "));
+            this.instance.onData((raw) => {
+                const data = raw.toString();
+                const publicIpMatch = data.match(serverPublicIpRE);
+                if (data.match(serverOnRE)) {
+                    this.setState(CSGODSState.ON);
+                }
+                if (publicIpMatch) {
+                    this.publicIpAddress = `${publicIpMatch[1]}:${port}`;
+                }
+                this.emit("stdout", data);
+            });
         }
     }
     stop(force = false) {
-        if (this.csgoServer !== null && (force || this.state === CSGODSState.ON)) {
+        if (this.instance !== undefined
+            && (force || this.state === CSGODSState.ON)) {
             this.setState(CSGODSState.TURNING_OFF);
-            this.csgoServer.on("exit", () => {
-                this.csgoServer = null;
+            this.instance.onExit(() => {
+                this.instance = undefined;
                 this.setState(CSGODSState.READY);
             });
-            this.csgoServer.kill();
+            this.instance.kill();
         }
     }
     console(line) {
-        if (this.csgoServer !== null) {
-            this.csgoServer.stdin.write(`${line}\n`);
+        if (this.instance !== undefined) {
+            this.instance.write(`${line}\n`);
         }
     }
 }

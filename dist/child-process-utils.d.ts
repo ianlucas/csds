@@ -1,2 +1,2 @@
-/// <reference types="node" />
-export declare function spawn(command: string, args: string[]): import("child_process").ChildProcessWithoutNullStreams;
+import { IPty } from "node-pty";
+export declare function spawn(command: string, args: string[]): IPty;

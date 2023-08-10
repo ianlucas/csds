@@ -37,17 +37,17 @@ export class SteamCMD {
             });
         });
     }
-    async extract(steamCMDCompressedFilePath) {
+    extract(steamCMDCompressedFilePath) {
         console.log("Extracting SteamCMD...");
         const extract = this.platform === "win32" ? extractZip : extractTarGz;
-        await extract(steamCMDCompressedFilePath, this.path);
+        extract(steamCMDCompressedFilePath, this.path);
         unlinkSync(steamCMDCompressedFilePath);
         console.log("SteamCMD extracted.");
     }
     async initialize() {
         if (!existsSync(this.executable)) {
             mkdirRecursive(this.path);
-            await this.extract(await this.download());
+            this.extract(await this.download());
         }
     }
     async run(commands, onData) {
@@ -55,14 +55,11 @@ export class SteamCMD {
         console.log("Running SteamCMD with commands:", commands);
         return new Promise((resolve) => {
             const child = spawn(this.executable, commands.split(" "));
-            child.stdout.on("data", (data) => {
+            child.onData((data) => {
                 onData(data.toString());
             });
-            child.stderr.on("data", (data) => {
-                onData(data.toString());
-            });
-            child.on("exit", (code) => {
-                resolve(code === 0);
+            child.onExit(({ exitCode }) => {
+                resolve(exitCode === 0);
             });
         });
     }

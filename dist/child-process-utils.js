@@ -1,4 +1,4 @@
-import { spawn as nodeSpawn } from "child_process";
+import { spawn as ptySpawn } from "node-pty";
 const childProcesses = [];
 function killChildProcesses() {
     for (const childProcess of childProcesses) {
@@ -6,7 +6,7 @@ function killChildProcesses() {
     }
 }
 export function spawn(command, args) {
-    const childProcess = nodeSpawn(command, args);
+    const childProcess = ptySpawn(command, args, {});
     childProcesses.push(childProcess);
     return childProcess;
 }

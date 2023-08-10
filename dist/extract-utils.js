@@ -2,7 +2,7 @@ import AdmZip from "adm-zip";
 import { createReadStream } from "fs";
 import { extract } from "tar";
 import { createGunzip } from "zlib";
-export async function extractZip(zipFilePath, destFolder) {
+export function extractZip(zipFilePath, destFolder) {
     const zip = new AdmZip(zipFilePath);
     zip.extractAllTo(destFolder, true);
 }

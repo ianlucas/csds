@@ -10,22 +10,40 @@ export declare enum CSGODSState {
     ON = 5,
     TURNING_OFF = 6
 }
+export declare interface CSGODS {
+    on(event: "state", listener: (state: CSGODSState) => void): this;
+    on(event: "progress", listener: (progress: {
+        state: string;
+        status: string;
+        progress: number;
+        current: number;
+        total: number;
+    }) => void): this;
+    on(event: "stdout", listener: (data: string) => void): this;
+}
+interface CSGODSOptions {
+    launch: string;
+    gsltToken?: string;
+    steamApiKey?: string;
+    port?: number;
+    tvPort?: number;
+}
 export declare class CSGODS extends EventEmitter {
     state: CSGODSState;
+    publicIpAddress?: string;
+    localIpAddress?: string;
     private steamCMD;
     private csgoPath;
     private csgoAddonsPath;
-    private csgoServerPath;
-    private csgoServer;
-    options: {
-        launch: string;
-    };
-    constructor(platform: "win32" | "linux" | undefined, path: string, options?: {
-        launch: string;
-    });
+    private csgoDSPath;
+    private instance?;
+    private executable;
+    options: CSGODSOptions;
+    constructor(platform: "win32" | "linux" | undefined, path: string, options?: CSGODSOptions);
     private setState;
     private initializeSteamCMD;
     updateCSGODS(): Promise<void>;
+    private fixCSGODS;
     initialize(): Promise<void>;
     installAddon(pluginName: string, zipFileBuffer: Buffer): void;
     deleteAddon(pluginName: string): void;
@@ -37,3 +55,4 @@ export declare class CSGODS extends EventEmitter {
     stop(force?: boolean): void;
     console(line: string): void;
 }
+export {};
