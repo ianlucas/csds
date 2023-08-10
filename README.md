@@ -2,7 +2,7 @@
 
 ## Notes for Linux
 
-You need to have the following dependencies installed in your system[1].
+You need to have the following dependencies installed in your system<sup>[1]</sup>.
 
 ```
 dpkg --add-architecture i386
