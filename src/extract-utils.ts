@@ -3,7 +3,7 @@ import { createReadStream } from "fs";
 import { extract } from "tar";
 import { createGunzip } from "zlib";
 
-export function extractZip(zipFilePath: string, destFolder: string) {
+export async function extractZip(zipFilePath: string, destFolder: string) {
     const zip = new AdmZip(zipFilePath);
     zip.extractAllTo(destFolder, true);
 }

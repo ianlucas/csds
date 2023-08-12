@@ -38,7 +38,7 @@ export class SteamCMD {
             get(url, (response) => {
                 response.pipe(file);
                 file.on("finish", () => {
-                    console.log("SteamCMD downloaded.");
+                    console.log(`SteamCMD donwloaded to ${filePath}`);
                     file.close();
                     resolve(filePath);
                 }).on("error", (error) => {
@@ -49,10 +49,10 @@ export class SteamCMD {
         });
     }
 
-    private extract(steamCMDCompressedFilePath: string) {
+    private async extract(steamCMDCompressedFilePath: string) {
         console.log("Extracting SteamCMD...");
         const extract = this.platform === "win32" ? extractZip : extractTarGz;
-        extract(steamCMDCompressedFilePath, this.path);
+        await extract(steamCMDCompressedFilePath, this.path);
         unlinkSync(steamCMDCompressedFilePath);
         console.log("SteamCMD extracted.");
     }
@@ -60,7 +60,7 @@ export class SteamCMD {
     async initialize() {
         if (!existsSync(this.executable)) {
             mkdirRecursive(this.path);
-            this.extract(await this.download());
+            await this.extract(await this.download());
         }
     }
 
