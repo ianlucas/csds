@@ -215,6 +215,28 @@ export class CSGODS extends EventEmitter {
         return false;
     }
 
+    async restart() {
+        return new Promise(resolve => {
+            const listener = (state: CSGODSState) => {
+                if (state === CSGODSState.ON) {
+                    this.off("state", listener);
+                    resolve(true);
+                }
+            };
+            this.on("state", listener);
+            this.stop();
+            this.start();
+        });
+    }
+
+    status() {
+        return {
+            on: this.state === CSGODSState.ON,
+            localIpAddress: this.localIpAddress,
+            publicIpAddress: this.publicIpAddress
+        };
+    }
+
     console(line: string) {
         if (this.instance !== undefined) {
             this.instance.write(`${line}\n`);
