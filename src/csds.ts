@@ -109,7 +109,7 @@ export class CSGODS extends EventEmitter {
 
     /// @see https://github.com/GameServerManagers/LinuxGSM/blob/master/lgsm/functions/fix_csgo.sh
     private fixCSGODS() {
-        const libgccPath = join(this.csgoDSPath, "libgcc_s.so.1");
+        const libgccPath = join(this.csgoDSPath, "bin/libgcc_s.so.1");
         if (existsSync(libgccPath)) {
             renameSync(libgccPath, `${libgccPath}.bak`);
         }
