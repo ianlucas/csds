@@ -57,14 +57,14 @@ export class SteamCMD {
         console.log("SteamCMD extracted.");
     }
 
-    async initialize() {
+    async update() {
         if (!existsSync(this.executable)) {
             mkdirRecursive(this.path);
             await this.extract(await this.download());
         }
     }
 
-    async run(
+    async exec(
         commands: string,
         onData: (data: string) => void
     ): Promise<boolean> {
@@ -84,7 +84,7 @@ export class SteamCMD {
         });
     }
 
-    async update(
+    async updateApp(
         appId: number,
         onProgress: (
             progress: {
@@ -96,7 +96,7 @@ export class SteamCMD {
             }
         ) => void
     ) {
-        await this.run(
+        await this.exec(
             `+login anonymous +app_update ${appId} +quit`,
             data => {
                 data.split("\n").forEach(line => {
