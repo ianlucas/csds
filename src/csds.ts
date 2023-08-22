@@ -143,6 +143,23 @@ export class CSGODS extends EventEmitter {
         }
     }
 
+    private makeLaunchOptions(options: CSGODSOptions) {
+        return Object.keys(options).map(key => {
+            const value = this.options[key as keyof CSGODSOptions];
+            const argumentName =
+                CSGODS_LAUNCH_OPTIONS_ARGUMENTS[key as keyof CSGODSOptions];
+            if (typeof value === "boolean") {
+                return value ? argumentName : "";
+            }
+            if (typeof value === undefined) {
+                return "";
+            }
+            return `${argumentName} ${value}`;
+        }).filter(Boolean).map((option) => {
+            return option as string;
+        }).join(" ");
+    }
+
     async initialize() {
         await this.updateSteamCMD();
         if (!existsSync(this.csgoAddonsPath)) {
@@ -172,33 +189,16 @@ export class CSGODS extends EventEmitter {
         });
     }
 
-    write(file: string, data: string) {
+    writeFile(file: string, data: string) {
         writeFileSync(resolve(this.csgoPath, file), data, {
             encoding: "utf-8"
         });
     }
 
-    read(file: string) {
+    readFile(file: string) {
         return readFileSync(resolve(this.csgoPath, file), {
             encoding: "utf-8"
         });
-    }
-
-    private makeLaunchOptions(options: CSGODSOptions) {
-        return Object.keys(options).map(key => {
-            const value = this.options[key as keyof CSGODSOptions];
-            const argumentName =
-                CSGODS_LAUNCH_OPTIONS_ARGUMENTS[key as keyof CSGODSOptions];
-            if (typeof value === "boolean") {
-                return value ? argumentName : "";
-            }
-            if (typeof value === undefined) {
-                return "";
-            }
-            return `${argumentName} ${value}`;
-        }).filter(Boolean).map((option) => {
-            return option as string;
-        }).join(" ");
     }
 
     start(options?: CSGODSOptions) {
@@ -245,7 +245,7 @@ export class CSGODS extends EventEmitter {
             if (force) {
                 this.instance.kill();
             } else {
-                this.console("exit");
+                this.sendConsoleCommand("exit");
             }
             return true;
         }
@@ -266,7 +266,7 @@ export class CSGODS extends EventEmitter {
         });
     }
 
-    status() {
+    retrieveStatus() {
         return {
             on: this.state.status === CSGODS_STATUS_ONLINE,
             localIpAddress: this.localIpAddress,
@@ -274,7 +274,7 @@ export class CSGODS extends EventEmitter {
         };
     }
 
-    console(line: string) {
+    sendConsoleCommand(line: string) {
         if (this.instance !== undefined) {
             this.instance.write(`${line}\n`);
             return true;

@@ -27,7 +27,7 @@ export class SteamCMD {
             get(url, (response) => {
                 response.pipe(file);
                 file.on("finish", () => {
-                    console.log("SteamCMD downloaded.");
+                    console.log(`SteamCMD donwloaded to ${filePath}`);
                     file.close();
                     resolve(filePath);
                 }).on("error", (error) => {
@@ -37,20 +37,20 @@ export class SteamCMD {
             });
         });
     }
-    extract(steamCMDCompressedFilePath) {
+    async extract(steamCMDCompressedFilePath) {
         console.log("Extracting SteamCMD...");
         const extract = this.platform === "win32" ? extractZip : extractTarGz;
-        extract(steamCMDCompressedFilePath, this.path);
+        await extract(steamCMDCompressedFilePath, this.path);
         unlinkSync(steamCMDCompressedFilePath);
         console.log("SteamCMD extracted.");
     }
-    async initialize() {
+    async update() {
         if (!existsSync(this.executable)) {
             mkdirRecursive(this.path);
-            this.extract(await this.download());
+            await this.extract(await this.download());
         }
     }
-    async run(commands, onData) {
+    async exec(commands, onData) {
         commands = `+force_install_dir ${this.path}/steamcmd ${commands}`;
         console.log("Running SteamCMD with commands:", commands);
         return new Promise((resolve) => {
@@ -63,8 +63,8 @@ export class SteamCMD {
             });
         });
     }
-    async update(appId, onProgress) {
-        await this.run(`+login anonymous +app_update ${appId} +quit`, data => {
+    async updateApp(appId, onProgress) {
+        await this.exec(`+login anonymous +app_update ${appId} +quit`, data => {
             data.split("\n").forEach(line => {
                 const progressMatches = line.trim().match(progressRE);
                 if (progressMatches) {

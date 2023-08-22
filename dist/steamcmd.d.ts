@@ -2,12 +2,12 @@ export declare class SteamCMD {
     path: string;
     private executable;
     private platform;
-    constructor(platform: "win32" | "linux" | undefined, path: string);
+    constructor(platform: "linux" | "win32" | undefined, path: string);
     private download;
     private extract;
-    initialize(): Promise<void>;
-    run(commands: string, onData: (data: string) => void): Promise<boolean>;
-    update(appId: number, onProgress: (progress: {
+    update(): Promise<void>;
+    exec(commands: string, onData: (data: string) => void): Promise<boolean>;
+    updateApp(appId: number, onProgress: (progress: {
         state: string;
         status: string;
         progress: number;
