@@ -21,7 +21,9 @@
         "@types/adm-zip": "^0.5.0",
         "@types/tar": "^6.1.5",
         "adm-zip": "^0.5.10",
-        "node-pty": "^1.0.0",
         "tar": "^6.1.15"
+    },
+    "peerDependencies": {
+        "node-pty": "^1.1.0-beta1"
     }
 }
