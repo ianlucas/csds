@@ -2,10 +2,11 @@
     "name": "csds",
     "version": "1.0.0",
     "description": "Counter-Strike Dedicated Server manager.",
-    "main": "dist/index.js",
+    "main": "node-dist/index.js",
+    "module": "dist/index.js",
     "scripts": {
         "dev": "tsc -w",
-        "build": "tsc",
+        "build": "tsc && tsc -p tsconfig.node.json",
         "build-docs": "typedoc src/index.ts"
     },
     "author": "Ian Lucas",
