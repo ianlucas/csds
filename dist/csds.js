@@ -98,7 +98,7 @@ export class CSGODS extends EventEmitter {
     }
     makeLaunchOptions(options) {
         return Object.keys(options).map(key => {
-            const value = this.options[key];
+            const value = options[key];
             const argumentName = CSGODS_LAUNCH_OPTIONS_ARGUMENTS[key];
             if (typeof value === "boolean") {
                 return value ? argumentName : "";
@@ -107,9 +107,7 @@ export class CSGODS extends EventEmitter {
                 return "";
             }
             return `${argumentName} ${value}`;
-        }).filter(Boolean).map((option) => {
-            return option;
-        }).join(" ");
+        }).filter(Boolean).join(" ");
     }
     async initialize() {
         await this.updateSteamCMD();

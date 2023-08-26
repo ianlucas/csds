@@ -150,7 +150,7 @@ export class CSGODS extends EventEmitter {
 
     private makeLaunchOptions(options: CSGODSOptions) {
         return Object.keys(options).map(key => {
-            const value = this.options[key as keyof CSGODSOptions];
+            const value = options[key as keyof CSGODSOptions];
             const argumentName =
                 CSGODS_LAUNCH_OPTIONS_ARGUMENTS[key as keyof CSGODSOptions];
             if (typeof value === "boolean") {
@@ -160,9 +160,7 @@ export class CSGODS extends EventEmitter {
                 return "";
             }
             return `${argumentName} ${value}`;
-        }).filter(Boolean).map((option) => {
-            return option as string;
-        }).join(" ");
+        }).filter(Boolean).join(" ");
     }
 
     async initialize() {

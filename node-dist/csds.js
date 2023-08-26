@@ -109,7 +109,7 @@ class CSGODS extends events_1.default {
     }
     makeLaunchOptions(options) {
         return Object.keys(options).map(key => {
-            const value = this.options[key];
+            const value = options[key];
             const argumentName = exports.CSGODS_LAUNCH_OPTIONS_ARGUMENTS[key];
             if (typeof value === "boolean") {
                 return value ? argumentName : "";
@@ -118,9 +118,7 @@ class CSGODS extends events_1.default {
                 return "";
             }
             return `${argumentName} ${value}`;
-        }).filter(Boolean).map((option) => {
-            return option;
-        }).join(" ");
+        }).filter(Boolean).join(" ");
     }
     initialize() {
         return __awaiter(this, void 0, void 0, function* () {
