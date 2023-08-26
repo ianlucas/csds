@@ -89,12 +89,15 @@ class CSGODS extends events_1.default {
     }
     update() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.setState({ status: exports.CSGODS_STATUS_UPDATING_CSGODS });
-            yield this.steamCMD.updateApp(exports.CSGODS_APPID, ({ progress }) => {
-                this.setState({ progress });
-            });
-            this.fixCSGODS();
-            this.setState({ status: exports.CSGODS_STATUS_READY });
+            if (this.state.status === exports.CSGODS_STATUS_UPDATING_STEAMCMD
+                || this.state.status === exports.CSGODS_STATUS_READY) {
+                this.setState({ status: exports.CSGODS_STATUS_UPDATING_CSGODS });
+                yield this.steamCMD.updateApp(exports.CSGODS_APPID, ({ progress }) => {
+                    this.setState({ progress });
+                });
+                this.fixCSGODS();
+                this.setState({ status: exports.CSGODS_STATUS_READY });
+            }
         });
     }
     /// @see https://github.com/GameServerManagers/LinuxGSM/blob/master/lgsm/functions/fix_csgo.sh
