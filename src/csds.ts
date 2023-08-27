@@ -10,7 +10,7 @@ import { getLocalIpAddress } from "./os-utils.js";
 import { SteamCMD } from "./steamcmd.js";
 
 const CSGODS_CONSOLE_URL =
-    "https://raw.githubusercontent.com/ianlucas/csds/main/ext/srcds_console.exe";
+    "https://raw.githubusercontent.com/ianlucas/csds/main/bin/srcds_console.exe";
 const serverPublicIpRE = /Public IP is (\d+\.\d+\.\d+\.\d+)/;
 const serverOnRE = /GC Connection established for server/;
 
@@ -111,8 +111,8 @@ export class CSGODS extends EventEmitter {
         super();
         this.platform = platform;
         this.steamCMD = new SteamCMD(platform, path);
-        this.csgoAddonsPath = join(path, ".steamcmd/plugins");
-        this.csgoDSPath = join(this.steamCMD.path, "steamcmd");
+        this.csgoAddonsPath = join(path, ".steamcmd/csgods-addons");
+        this.csgoDSPath = join(this.steamCMD.path, "csgods");
         this.executable = join(
             this.csgoDSPath,
             platform === "win32" ? "srcds_console.exe" : "srcds_run"

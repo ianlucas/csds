@@ -74,8 +74,8 @@ class CSGODS extends events_1.default {
         };
         this.platform = platform;
         this.steamCMD = new steamcmd_js_1.SteamCMD(platform, path);
-        this.csgoAddonsPath = (0, path_1.join)(path, ".steamcmd/plugins");
-        this.csgoDSPath = (0, path_1.join)(this.steamCMD.path, "steamcmd");
+        this.csgoAddonsPath = (0, path_1.join)(path, ".steamcmd/csgods-addons");
+        this.csgoDSPath = (0, path_1.join)(this.steamCMD.path, "csgods");
         this.executable = (0, path_1.join)(this.csgoDSPath, platform === "win32" ? "srcds_console.exe" : "srcds_run");
         this.options = Object.assign(Object.assign({}, this.options), options);
         this.csgoPath = (0, path_1.join)(this.csgoDSPath, "csgo");
