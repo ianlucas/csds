@@ -40,6 +40,7 @@ export class CSGODS extends EventEmitter {
     };
     publicIpAddress;
     localIpAddress;
+    platform;
     steamCMD;
     csgoPath;
     csgoAddonsPath;
@@ -63,10 +64,11 @@ export class CSGODS extends EventEmitter {
     };
     constructor(platform = "linux", path, options) {
         super();
+        this.platform = platform;
         this.steamCMD = new SteamCMD(platform, path);
         this.csgoAddonsPath = join(path, ".steamcmd/plugins");
         this.csgoDSPath = join(this.steamCMD.path, "steamcmd");
-        this.executable = join(this.csgoDSPath, platform === "win32" ? "srcds.exe" : "srcds_run");
+        this.executable = join(this.csgoDSPath, platform === "win32" ? "SrcdsConRedirect.exe" : "srcds_run");
         this.options = { ...this.options, ...options };
         this.csgoPath = join(this.csgoDSPath, "csgo");
     }
@@ -150,9 +152,9 @@ export class CSGODS extends EventEmitter {
             const launchOptions = this.makeLaunchOptions({
                 ...this.options,
                 ...options
-            });
-            console.log(`Starting server with launch options: ${launchOptions}`);
-            this.instance = spawn(this.executable, launchOptions.split(" "));
+            }).split(" ");
+            console.log(`Starting server with launch options: ${launchOptions.join(" ")}`);
+            this.instance = spawn(this.executable, launchOptions);
             this.instance.onExit(() => {
                 this.instance = undefined;
                 this.setState({ status: CSGODS_STATUS_READY });
@@ -207,7 +209,7 @@ export class CSGODS extends EventEmitter {
     }
     sendConsoleCommand(line) {
         if (this.instance !== undefined) {
-            this.instance.write(`${line}\n`);
+            this.instance.write(`${line}\r\n`);
             return true;
         }
         return false;

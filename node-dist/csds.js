@@ -70,10 +70,11 @@ class CSGODS extends events_1.default {
             noBreakpad: true,
             noCrashDialog: true
         };
+        this.platform = platform;
         this.steamCMD = new steamcmd_js_1.SteamCMD(platform, path);
         this.csgoAddonsPath = (0, path_1.join)(path, ".steamcmd/plugins");
         this.csgoDSPath = (0, path_1.join)(this.steamCMD.path, "steamcmd");
-        this.executable = (0, path_1.join)(this.csgoDSPath, platform === "win32" ? "srcds.exe" : "srcds_run");
+        this.executable = (0, path_1.join)(this.csgoDSPath, platform === "win32" ? "SrcdsConRedirect.exe" : "srcds_run");
         this.options = Object.assign(Object.assign({}, this.options), options);
         this.csgoPath = (0, path_1.join)(this.csgoDSPath, "csgo");
     }
@@ -160,9 +161,9 @@ class CSGODS extends events_1.default {
     start(options) {
         if (!this.instance && this.state.status === exports.CSGODS_STATUS_READY) {
             this.setState({ status: exports.CSGODS_STATUS_GOING_ONLINE });
-            const launchOptions = this.makeLaunchOptions(Object.assign(Object.assign({}, this.options), options));
-            console.log(`Starting server with launch options: ${launchOptions}`);
-            this.instance = (0, child_process_utils_js_1.spawn)(this.executable, launchOptions.split(" "));
+            const launchOptions = this.makeLaunchOptions(Object.assign(Object.assign({}, this.options), options)).split(" ");
+            console.log(`Starting server with launch options: ${launchOptions.join(" ")}`);
+            this.instance = (0, child_process_utils_js_1.spawn)(this.executable, launchOptions);
             this.instance.onExit(() => {
                 this.instance = undefined;
                 this.setState({ status: exports.CSGODS_STATUS_READY });
@@ -220,7 +221,7 @@ class CSGODS extends events_1.default {
     }
     sendConsoleCommand(line) {
         if (this.instance !== undefined) {
-            this.instance.write(`${line}\n`);
+            this.instance.write(`${line}\r\n`);
             return true;
         }
         return false;

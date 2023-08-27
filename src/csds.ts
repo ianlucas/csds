@@ -77,6 +77,7 @@ export class CSGODS extends EventEmitter {
     };
     publicIpAddress?: string;
     localIpAddress?: string;
+    private platform: "win32" | "linux";
     private steamCMD: SteamCMD;
     private csgoPath: string;
     private csgoAddonsPath: string;
@@ -105,12 +106,13 @@ export class CSGODS extends EventEmitter {
         options?: CSGODSOptions
     ) {
         super();
+        this.platform = platform;
         this.steamCMD = new SteamCMD(platform, path);
         this.csgoAddonsPath = join(path, ".steamcmd/plugins");
         this.csgoDSPath = join(this.steamCMD.path, "steamcmd");
         this.executable = join(
             this.csgoDSPath,
-            platform === "win32" ? "srcds.exe" : "srcds_run"
+            platform === "win32" ? "SrcdsConRedirect.exe" : "srcds_run"
         );
         this.options = { ...this.options, ...options };
         this.csgoPath = join(this.csgoDSPath, "csgo");
@@ -210,14 +212,13 @@ export class CSGODS extends EventEmitter {
             const launchOptions = this.makeLaunchOptions({
                 ...this.options,
                 ...options
-            });
+            }).split(" ");
             console.log(
-                `Starting server with launch options: ${launchOptions}`
+                `Starting server with launch options: ${
+                    launchOptions.join(" ")
+                }`
             );
-            this.instance = spawn(
-                this.executable,
-                launchOptions.split(" ")
-            );
+            this.instance = spawn(this.executable, launchOptions);
             this.instance.onExit(() => {
                 this.instance = undefined;
                 this.setState({ status: CSGODS_STATUS_READY });
@@ -279,7 +280,7 @@ export class CSGODS extends EventEmitter {
 
     sendConsoleCommand(line: string) {
         if (this.instance !== undefined) {
-            this.instance.write(`${line}\n`);
+            this.instance.write(`${line}\r\n`);
             return true;
         }
         return false;

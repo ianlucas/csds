@@ -1,4 +1,3 @@
-import { ChildProcess, spawn as nodeSpawn, SpawnOptionsWithoutStdio } from "child_process";
 import { IPty, spawn as ptySpawn } from "node-pty";
 
 const childProcesses: IPty[] = [];
@@ -9,10 +8,7 @@ function killChildProcesses() {
     }
 }
 
-export function spawn(
-    command: string,
-    args: string[]
-) {
+export function spawn(command: string, args: string[]) {
     const childProcess = ptySpawn(command, args, {});
     childProcesses.push(childProcess);
     return childProcess;

@@ -57,6 +57,7 @@ export declare class CSGODS extends EventEmitter {
     };
     publicIpAddress?: string;
     localIpAddress?: string;
+    private platform;
     private steamCMD;
     private csgoPath;
     private csgoAddonsPath;
