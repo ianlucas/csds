@@ -65,7 +65,6 @@ class SteamCMD {
     }
     exec(commands, onData) {
         return __awaiter(this, void 0, void 0, function* () {
-            commands = `+force_install_dir ${this.path}/steamcmd ${commands}`;
             console.log("Running SteamCMD with commands:", commands);
             return new Promise((resolve) => {
                 const child = (0, child_process_utils_js_1.spawn)(this.executable, commands.split(" "));
@@ -78,9 +77,9 @@ class SteamCMD {
             });
         });
     }
-    updateApp(appId, onProgress) {
+    updateApp(path, appId, onProgress) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.exec(`+login anonymous +app_update ${appId} +quit`, data => {
+            yield this.exec(`+force_install_dir ${path} +login anonymous +app_update ${appId} +quit`, data => {
                 data.split("\n").forEach(line => {
                     const progressMatches = line.trim().match(progressRE);
                     if (progressMatches) {

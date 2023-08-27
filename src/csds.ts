@@ -137,9 +137,13 @@ export class CSGODS extends EventEmitter {
             || this.state.status === CSGODS_STATUS_READY
         ) {
             this.setState({ status: CSGODS_STATUS_UPDATING_CSGODS });
-            await this.steamCMD.updateApp(CSGODS_APPID, ({ progress }) => {
-                this.setState({ progress });
-            });
+            await this.steamCMD.updateApp(
+                this.csgoDSPath,
+                CSGODS_APPID,
+                ({ progress }) => {
+                    this.setState({ progress });
+                }
+            );
             await this.fixCSGODS();
             this.setState({ status: CSGODS_STATUS_READY });
         }

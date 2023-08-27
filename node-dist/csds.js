@@ -22,7 +22,7 @@ const extract_utils_js_1 = require("./extract-utils.js");
 const fs_utils_js_1 = require("./fs-utils.js");
 const os_utils_js_1 = require("./os-utils.js");
 const steamcmd_js_1 = require("./steamcmd.js");
-const CSGODS_CONSOLE_URL = "https://raw.githubusercontent.com/ianlucas/csds/main/ext/srcds_console.exe";
+const CSGODS_CONSOLE_URL = "https://raw.githubusercontent.com/ianlucas/csds/main/bin/srcds_console.exe";
 const serverPublicIpRE = /Public IP is (\d+\.\d+\.\d+\.\d+)/;
 const serverOnRE = /GC Connection established for server/;
 exports.CSGODS_APPID = 740;
@@ -95,7 +95,7 @@ class CSGODS extends events_1.default {
             if (this.state.status === exports.CSGODS_STATUS_UPDATING_STEAMCMD
                 || this.state.status === exports.CSGODS_STATUS_READY) {
                 this.setState({ status: exports.CSGODS_STATUS_UPDATING_CSGODS });
-                yield this.steamCMD.updateApp(exports.CSGODS_APPID, ({ progress }) => {
+                yield this.steamCMD.updateApp(this.csgoDSPath, exports.CSGODS_APPID, ({ progress }) => {
                     this.setState({ progress });
                 });
                 yield this.fixCSGODS();

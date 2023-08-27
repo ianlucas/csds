@@ -7,7 +7,7 @@ export declare class SteamCMD {
     private extract;
     update(): Promise<void>;
     exec(commands: string, onData: (data: string) => void): Promise<boolean>;
-    updateApp(appId: number, onProgress: (progress: {
+    updateApp(path: string, appId: number, onProgress: (progress: {
         state: string;
         status: string;
         progress: number;

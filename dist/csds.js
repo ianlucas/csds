@@ -7,7 +7,7 @@ import { extractZipFromBuffer } from "./extract-utils.js";
 import { mkdirRecursive, rmByFileList } from "./fs-utils.js";
 import { getLocalIpAddress } from "./os-utils.js";
 import { SteamCMD } from "./steamcmd.js";
-const CSGODS_CONSOLE_URL = "https://raw.githubusercontent.com/ianlucas/csds/main/ext/srcds_console.exe";
+const CSGODS_CONSOLE_URL = "https://raw.githubusercontent.com/ianlucas/csds/main/bin/srcds_console.exe";
 const serverPublicIpRE = /Public IP is (\d+\.\d+\.\d+\.\d+)/;
 const serverOnRE = /GC Connection established for server/;
 export const CSGODS_APPID = 740;
@@ -86,7 +86,7 @@ export class CSGODS extends EventEmitter {
         if (this.state.status === CSGODS_STATUS_UPDATING_STEAMCMD
             || this.state.status === CSGODS_STATUS_READY) {
             this.setState({ status: CSGODS_STATUS_UPDATING_CSGODS });
-            await this.steamCMD.updateApp(CSGODS_APPID, ({ progress }) => {
+            await this.steamCMD.updateApp(this.csgoDSPath, CSGODS_APPID, ({ progress }) => {
                 this.setState({ progress });
             });
             await this.fixCSGODS();

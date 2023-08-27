@@ -68,7 +68,6 @@ export class SteamCMD {
         commands: string,
         onData: (data: string) => void
     ): Promise<boolean> {
-        commands = `+force_install_dir ${this.path}/steamcmd ${commands}`;
         console.log("Running SteamCMD with commands:", commands);
         return new Promise((resolve) => {
             const child = spawn(
@@ -85,6 +84,7 @@ export class SteamCMD {
     }
 
     async updateApp(
+        path: string,
         appId: number,
         onProgress: (
             progress: {
@@ -97,7 +97,7 @@ export class SteamCMD {
         ) => void
     ) {
         await this.exec(
-            `+login anonymous +app_update ${appId} +quit`,
+            `+force_install_dir ${path} +login anonymous +app_update ${appId} +quit`,
             data => {
                 data.split("\n").forEach(line => {
                     const progressMatches = line.trim().match(progressRE);

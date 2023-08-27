@@ -51,7 +51,6 @@ export class SteamCMD {
         }
     }
     async exec(commands, onData) {
-        commands = `+force_install_dir ${this.path}/steamcmd ${commands}`;
         console.log("Running SteamCMD with commands:", commands);
         return new Promise((resolve) => {
             const child = spawn(this.executable, commands.split(" "));
@@ -63,8 +62,8 @@ export class SteamCMD {
             });
         });
     }
-    async updateApp(appId, onProgress) {
-        await this.exec(`+login anonymous +app_update ${appId} +quit`, data => {
+    async updateApp(path, appId, onProgress) {
+        await this.exec(`+force_install_dir ${path} +login anonymous +app_update ${appId} +quit`, data => {
             data.split("\n").forEach(line => {
                 const progressMatches = line.trim().match(progressRE);
                 if (progressMatches) {
