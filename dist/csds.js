@@ -7,7 +7,7 @@ import { extractZipFromBuffer } from "./extract-utils.js";
 import { mkdirRecursive, rmByFileList } from "./fs-utils.js";
 import { getLocalIpAddress } from "./os-utils.js";
 import { SteamCMD } from "./steamcmd.js";
-const CSGODS_CONSOLE_URL = "https://github.com/ianlucas/csds/raw/main/ext/srcds_console.exe";
+const CSGODS_CONSOLE_URL = "https://raw.githubusercontent.com/ianlucas/csds/main/ext/srcds_console.exe";
 const serverPublicIpRE = /Public IP is (\d+\.\d+\.\d+\.\d+)/;
 const serverOnRE = /GC Connection established for server/;
 export const CSGODS_APPID = 740;
