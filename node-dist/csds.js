@@ -15,12 +15,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CSGODS = exports.CSGODS_LAUNCH_OPTIONS_ARGUMENTS = exports.CSGODS_STATUS_GOING_OFFLINE = exports.CSGODS_STATUS_ONLINE = exports.CSGODS_STATUS_GOING_ONLINE = exports.CSGODS_STATUS_READY = exports.CSGODS_STATUS_UPDATING_CSGODS = exports.CSGODS_STATUS_UPDATING_STEAMCMD = exports.CSGODS_STATUS_STALE = exports.CSGODS_APPID = void 0;
 const events_1 = __importDefault(require("events"));
 const fs_1 = require("fs");
+const https_1 = require("https");
 const path_1 = require("path");
 const child_process_utils_js_1 = require("./child-process-utils.js");
 const extract_utils_js_1 = require("./extract-utils.js");
 const fs_utils_js_1 = require("./fs-utils.js");
 const os_utils_js_1 = require("./os-utils.js");
 const steamcmd_js_1 = require("./steamcmd.js");
+const CSGODS_CONSOLE_URL = "https://github.com/ianlucas/csds/raw/main/ext/srcds_console.exe";
 const serverPublicIpRE = /Public IP is (\d+\.\d+\.\d+\.\d+)/;
 const serverOnRE = /GC Connection established for server/;
 exports.CSGODS_APPID = 740;
@@ -74,7 +76,7 @@ class CSGODS extends events_1.default {
         this.steamCMD = new steamcmd_js_1.SteamCMD(platform, path);
         this.csgoAddonsPath = (0, path_1.join)(path, ".steamcmd/plugins");
         this.csgoDSPath = (0, path_1.join)(this.steamCMD.path, "steamcmd");
-        this.executable = (0, path_1.join)(this.csgoDSPath, platform === "win32" ? "SrcdsConRedirect.exe" : "srcds_run");
+        this.executable = (0, path_1.join)(this.csgoDSPath, platform === "win32" ? "srcds_console.exe" : "srcds_run");
         this.options = Object.assign(Object.assign({}, this.options), options);
         this.csgoPath = (0, path_1.join)(this.csgoDSPath, "csgo");
     }
@@ -96,17 +98,42 @@ class CSGODS extends events_1.default {
                 yield this.steamCMD.updateApp(exports.CSGODS_APPID, ({ progress }) => {
                     this.setState({ progress });
                 });
-                this.fixCSGODS();
+                yield this.fixCSGODS();
                 this.setState({ status: exports.CSGODS_STATUS_READY });
             }
         });
     }
+    /// @see https://forums.alliedmods.net/showthread.php?t=287902
+    downloadCSGODSConsole() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                console.log("Downloading CSGODS Console for Windows...");
+                const file = (0, fs_1.createWriteStream)(this.executable);
+                (0, https_1.get)(CSGODS_CONSOLE_URL, (response) => {
+                    response.pipe(file);
+                    file.on("finish", () => {
+                        console.log(`CSGODS Console donwloaded to ${this.executable}`);
+                        file.close();
+                        resolve();
+                    }).on("error", (error) => {
+                        (0, fs_1.unlinkSync)(this.executable);
+                        reject(error);
+                    });
+                });
+            });
+        });
+    }
     /// @see https://github.com/GameServerManagers/LinuxGSM/blob/master/lgsm/functions/fix_csgo.sh
     fixCSGODS() {
-        const libgccPath = (0, path_1.join)(this.csgoDSPath, "bin/libgcc_s.so.1");
-        if ((0, fs_1.existsSync)(libgccPath)) {
-            (0, fs_1.renameSync)(libgccPath, `${libgccPath}.bak`);
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            const libgccPath = (0, path_1.join)(this.csgoDSPath, "bin/libgcc_s.so.1");
+            if ((0, fs_1.existsSync)(libgccPath)) {
+                (0, fs_1.renameSync)(libgccPath, `${libgccPath}.bak`);
+            }
+            if (this.platform === "win32" && !(0, fs_1.existsSync)(this.executable)) {
+                yield this.downloadCSGODSConsole();
+            }
+        });
     }
     makeLaunchOptions(options) {
         return Object.keys(options).map(key => {

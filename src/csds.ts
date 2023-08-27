@@ -1,13 +1,16 @@
 import EventEmitter from "events";
-import { existsSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "fs";
+import { createWriteStream, existsSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "fs";
+import { get } from "https";
 import { IPty } from "node-pty";
-import { join, resolve } from "path";
+import { basename, join, resolve } from "path";
 import { spawn } from "./child-process-utils.js";
 import { extractZipFromBuffer } from "./extract-utils.js";
 import { mkdirRecursive, rmByFileList } from "./fs-utils.js";
 import { getLocalIpAddress } from "./os-utils.js";
 import { SteamCMD } from "./steamcmd.js";
 
+const CSGODS_CONSOLE_URL =
+    "https://github.com/ianlucas/csds/raw/main/ext/srcds_console.exe";
 const serverPublicIpRE = /Public IP is (\d+\.\d+\.\d+\.\d+)/;
 const serverOnRE = /GC Connection established for server/;
 
@@ -112,7 +115,7 @@ export class CSGODS extends EventEmitter {
         this.csgoDSPath = join(this.steamCMD.path, "steamcmd");
         this.executable = join(
             this.csgoDSPath,
-            platform === "win32" ? "SrcdsConRedirect.exe" : "srcds_run"
+            platform === "win32" ? "srcds_console.exe" : "srcds_run"
         );
         this.options = { ...this.options, ...options };
         this.csgoPath = join(this.csgoDSPath, "csgo");
@@ -137,16 +140,40 @@ export class CSGODS extends EventEmitter {
             await this.steamCMD.updateApp(CSGODS_APPID, ({ progress }) => {
                 this.setState({ progress });
             });
-            this.fixCSGODS();
+            await this.fixCSGODS();
             this.setState({ status: CSGODS_STATUS_READY });
         }
     }
 
+    /// @see https://forums.alliedmods.net/showthread.php?t=287902
+    private async downloadCSGODSConsole(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            console.log("Downloading CSGODS Console for Windows...");
+            const file = createWriteStream(this.executable);
+            get(CSGODS_CONSOLE_URL, (response) => {
+                response.pipe(file);
+                file.on("finish", () => {
+                    console.log(
+                        `CSGODS Console donwloaded to ${this.executable}`
+                    );
+                    file.close();
+                    resolve();
+                }).on("error", (error) => {
+                    unlinkSync(this.executable);
+                    reject(error);
+                });
+            });
+        });
+    }
+
     /// @see https://github.com/GameServerManagers/LinuxGSM/blob/master/lgsm/functions/fix_csgo.sh
-    private fixCSGODS() {
+    private async fixCSGODS() {
         const libgccPath = join(this.csgoDSPath, "bin/libgcc_s.so.1");
         if (existsSync(libgccPath)) {
             renameSync(libgccPath, `${libgccPath}.bak`);
+        }
+        if (this.platform === "win32" && !existsSync(this.executable)) {
+            await this.downloadCSGODSConsole();
         }
     }
 

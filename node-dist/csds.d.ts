@@ -69,6 +69,7 @@ export declare class CSGODS extends EventEmitter {
     private setState;
     private updateSteamCMD;
     update(): Promise<void>;
+    private downloadCSGODSConsole;
     private fixCSGODS;
     private makeLaunchOptions;
     initialize(): Promise<void>;
